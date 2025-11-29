@@ -52,6 +52,8 @@ class GPUPIXEL_API SinkRawData : public Sink {
   std::shared_ptr<GPUPixelFramebuffer> framebuffer_;
 
   bool is_initialized_ = false;
+  uint32_t vertex_buffer_id_ = 0;
+  uint32_t tex_coord_buffer_id_ = 0;
 
   // Image dimensions
   int32_t width_ = 0;
@@ -60,6 +62,9 @@ class GPUPIXEL_API SinkRawData : public Sink {
   // Frame buffers for pixel data
   uint8_t* rgba_buffer_ = nullptr;  // RGBA buffer
   uint8_t* yuv_buffer_ = nullptr;   // YUV buffer
+
+  void InitGeometryBuffers();
+  void DestroyGeometryBuffers();
 };
 
 }  // namespace gpupixel

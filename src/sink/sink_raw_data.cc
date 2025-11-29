@@ -64,6 +64,8 @@ SinkRawData::~SinkRawData() {
     delete[] yuv_buffer_;
   }
   yuv_buffer_ = nullptr;
+
+  DestroyGeometryBuffers();
 }
 
 void SinkRawData::Render() {
@@ -88,24 +90,20 @@ void SinkRawData::Render() {
   glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-  float image_vertices[] = {
-      -1.0, -1.0,  // Bottom left
-      1.0,  -1.0,  // Bottom right
-      -1.0, 1.0,   // Top left
-      1.0,  1.0    // Top right
-  };
-
-  float texture_vertices[] = {
-      0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f, 1.0f, 1.0f,
-  };
+  if (!vertex_buffer_id_ || !tex_coord_buffer_id_) {
+    InitGeometryBuffers();
+  }
 
   GL_CALL(glEnableVertexAttribArray(position_attribute_));
-  GL_CALL(glVertexAttribPointer(position_attribute_, 2, GL_FLOAT, 0, 0,
-                                image_vertices));
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id_));
+  GL_CALL(glVertexAttribPointer(position_attribute_, 2, GL_FLOAT, GL_FALSE, 0,
+                                0));
 
   GL_CALL(glEnableVertexAttribArray(tex_coord_attribute_));
-  GL_CALL(glVertexAttribPointer(tex_coord_attribute_, 2, GL_FLOAT, 0, 0,
-                                texture_vertices));
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, tex_coord_buffer_id_));
+  GL_CALL(glVertexAttribPointer(tex_coord_attribute_, 2, GL_FLOAT, GL_FALSE, 0,
+                                0));
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D,
@@ -127,6 +125,8 @@ bool SinkRawData::InitWithShaderString(
   position_attribute_ = shader_program_->GetAttribLocation("position");
   tex_coord_attribute_ =
       shader_program_->GetAttribLocation("inputTextureCoordinate");
+
+  InitGeometryBuffers();
 
   return true;
 }
@@ -187,6 +187,52 @@ void SinkRawData::InitFramebuffer(int width, int height) {
                        ->GetFramebufferFactory()
                        ->CreateFramebuffer(width, height);
   }
+}
+
+void SinkRawData::InitGeometryBuffers() {
+  if (!vertex_buffer_id_) {
+    const float image_vertices[] = {
+        -1.0f, -1.0f,  // Bottom left
+        1.0f,  -1.0f,  // Bottom right
+        -1.0f, 1.0f,   // Top left
+        1.0f,  1.0f,   // Top right
+    };
+    GL_CALL(glGenBuffers(1, &vertex_buffer_id_));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id_));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(image_vertices),
+                         image_vertices, GL_STATIC_DRAW));
+  }
+
+  if (!tex_coord_buffer_id_) {
+    const float texture_vertices[] = {
+        0.0f, 0.0f,  //
+        1.0f, 0.0f,  //
+        0.0f, 1.0f,  //
+        1.0f, 1.0f,  //
+    };
+    GL_CALL(glGenBuffers(1, &tex_coord_buffer_id_));
+    GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, tex_coord_buffer_id_));
+    GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(texture_vertices),
+                         texture_vertices, GL_STATIC_DRAW));
+  }
+
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+}
+
+void SinkRawData::DestroyGeometryBuffers() {
+  if (!vertex_buffer_id_ && !tex_coord_buffer_id_) {
+    return;
+  }
+  GPUPixelContext::GetInstance()->SyncRunWithContext([&] {
+    if (vertex_buffer_id_) {
+      GL_CALL(glDeleteBuffers(1, &vertex_buffer_id_));
+      vertex_buffer_id_ = 0;
+    }
+    if (tex_coord_buffer_id_) {
+      GL_CALL(glDeleteBuffers(1, &tex_coord_buffer_id_));
+      tex_coord_buffer_id_ = 0;
+    }
+  });
 }
 
 }  // namespace gpupixel

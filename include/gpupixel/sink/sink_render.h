@@ -50,8 +50,22 @@ class GPUPIXEL_API SinkRender : public Sink {
   } background_color_;
 
   float display_vertices_[8];
+  float texture_coordinates_[8];
+
+  uint32_t vertex_buffer_id_ = 0;
+  uint32_t tex_coord_buffer_id_ = 0;
+  bool vertex_buffer_dirty_ = true;
+  bool tex_coord_buffer_dirty_ = true;
+  RotationMode cached_tex_rotation_ = NoRotation;
+  bool cached_tex_mirror_ = false;
+  bool texture_cache_initialized_ = false;
 
   void UpdateDisplayVertices();
+  void UpdateTextureCoordinatesCache(RotationMode rotation_mode);
+  void InitVertexBuffers();
+  void DestroyVertexBuffers();
+  void UploadVertexBuffer();
+  void UploadTexCoordBuffer();
   const float* GetTextureCoordinate(RotationMode rotation_mode);
 };
 

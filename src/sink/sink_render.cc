@@ -6,6 +6,7 @@
  */
 
 #include "gpupixel/sink/sink_render.h"
+#include <cstring>
 #include "core/gpupixel_context.h"
 #include "gpupixel/filter/filter.h"
 #include "utils/util.h"
@@ -31,6 +32,15 @@ SinkRender::SinkRender()
   background_color_.g = 0.0;
   background_color_.b = 0.0;
   background_color_.a = 0.0;
+
+  const float default_vertices[] = {
+      -1.0f, -1.0f, 1.0f,  -1.0f, -1.0f, 1.0f, 1.0f,  1.0f,
+  };
+  std::memcpy(display_vertices_, default_vertices, sizeof(display_vertices_));
+  const float* default_tex = GetTextureCoordinate(NoRotation);
+  std::memcpy(texture_coordinates_, default_tex, sizeof(texture_coordinates_));
+  cached_tex_rotation_ = NoRotation;
+  texture_cache_initialized_ = true;
 }
 
 SinkRender::~SinkRender() {
@@ -38,6 +48,7 @@ SinkRender::~SinkRender() {
     delete display_program_;
     display_program_ = 0;
   }
+  DestroyVertexBuffers();
 }
 
 void SinkRender::Init() {
@@ -52,6 +63,7 @@ void SinkRender::Init() {
   GPUPixelContext::GetInstance()->SetActiveGlProgram(display_program_);
   GL_CALL(glEnableVertexAttribArray(position_attribute_location_));
   GL_CALL(glEnableVertexAttribArray(tex_coord_attribute_location_));
+  InitVertexBuffers();
 };
 
 void SinkRender::SetInputFramebuffer(
@@ -74,6 +86,10 @@ void SinkRender::SetInputFramebuffer(
          last_input_rotation == rotation_mode))) {
     UpdateDisplayVertices();
   }
+
+  if (framebuffer) {
+    UpdateTextureCoordinatesCache(rotation_mode);
+  }
 }
 
 void SinkRender::SetFillMode(FillMode fill_mode) {
@@ -86,6 +102,10 @@ void SinkRender::SetFillMode(FillMode fill_mode) {
 void SinkRender::SetMirror(bool mirror) {
   if (mirror_ != mirror) {
     mirror_ = mirror;
+    texture_cache_initialized_ = false;
+    if (input_framebuffers_.find(0) != input_framebuffers_.end()) {
+      UpdateTextureCoordinatesCache(input_framebuffers_[0].rotation_mode);
+    }
   }
 }
 
@@ -113,11 +133,21 @@ void SinkRender::Render() {
   GL_CALL(glBindTexture(GL_TEXTURE_2D,
                         input_framebuffers_[0].frame_buffer->GetTexture()));
   GL_CALL(glUniform1i(color_map_uniform_location_, 0));
-  GL_CALL(glVertexAttribPointer(position_attribute_location_, 2, GL_FLOAT, 0, 0,
-                                display_vertices_));
-  GL_CALL(glVertexAttribPointer(
-      tex_coord_attribute_location_, 2, GL_FLOAT, 0, 0,
-      GetTextureCoordinate(input_framebuffers_[0].rotation_mode)));
+  UpdateTextureCoordinatesCache(input_framebuffers_[0].rotation_mode);
+  if (vertex_buffer_dirty_) {
+    UploadVertexBuffer();
+  }
+  if (tex_coord_buffer_dirty_) {
+    UploadTexCoordBuffer();
+  }
+
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id_));
+  GL_CALL(glVertexAttribPointer(position_attribute_location_, 2, GL_FLOAT,
+                                GL_FALSE, 0, 0));
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, tex_coord_buffer_id_));
+  GL_CALL(glVertexAttribPointer(tex_coord_attribute_location_, 2, GL_FLOAT,
+                                GL_FALSE, 0, 0));
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
 
   GL_CALL(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4));
 }
@@ -173,6 +203,7 @@ void SinkRender::UpdateDisplayVertices() {
   display_vertices_[5] = scaled_height;
   display_vertices_[6] = scaled_width;
   display_vertices_[7] = scaled_height;
+  vertex_buffer_dirty_ = true;
 }
 
 const float* SinkRender::GetTextureCoordinate(RotationMode rotation_mode) {
@@ -231,6 +262,69 @@ const float* SinkRender::GetTextureCoordinate(RotationMode rotation_mode) {
     case Rotate180:
       return rotate_180_texture_coordinates;
   }
+}
+
+void SinkRender::UpdateTextureCoordinatesCache(RotationMode rotation_mode) {
+  if (!texture_cache_initialized_ || rotation_mode != cached_tex_rotation_ ||
+      cached_tex_mirror_ != mirror_) {
+    const float* coords = GetTextureCoordinate(rotation_mode);
+    std::memcpy(texture_coordinates_, coords, sizeof(texture_coordinates_));
+    cached_tex_rotation_ = rotation_mode;
+    cached_tex_mirror_ = mirror_;
+    texture_cache_initialized_ = true;
+    tex_coord_buffer_dirty_ = true;
+  }
+}
+
+void SinkRender::InitVertexBuffers() {
+  if (!vertex_buffer_id_) {
+    GL_CALL(glGenBuffers(1, &vertex_buffer_id_));
+    vertex_buffer_dirty_ = true;
+  }
+  if (!tex_coord_buffer_id_) {
+    GL_CALL(glGenBuffers(1, &tex_coord_buffer_id_));
+    tex_coord_buffer_dirty_ = true;
+  }
+  UploadVertexBuffer();
+  UploadTexCoordBuffer();
+}
+
+void SinkRender::DestroyVertexBuffers() {
+  if (!vertex_buffer_id_ && !tex_coord_buffer_id_) {
+    return;
+  }
+  GPUPixelContext::GetInstance()->SyncRunWithContext([&] {
+    if (vertex_buffer_id_) {
+      GL_CALL(glDeleteBuffers(1, &vertex_buffer_id_));
+      vertex_buffer_id_ = 0;
+    }
+    if (tex_coord_buffer_id_) {
+      GL_CALL(glDeleteBuffers(1, &tex_coord_buffer_id_));
+      tex_coord_buffer_id_ = 0;
+    }
+  });
+}
+
+void SinkRender::UploadVertexBuffer() {
+  if (!vertex_buffer_id_) {
+    return;
+  }
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, vertex_buffer_id_));
+  GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(display_vertices_),
+                       display_vertices_, GL_DYNAMIC_DRAW));
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+  vertex_buffer_dirty_ = false;
+}
+
+void SinkRender::UploadTexCoordBuffer() {
+  if (!tex_coord_buffer_id_) {
+    return;
+  }
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, tex_coord_buffer_id_));
+  GL_CALL(glBufferData(GL_ARRAY_BUFFER, sizeof(texture_coordinates_),
+                       texture_coordinates_, GL_DYNAMIC_DRAW));
+  GL_CALL(glBindBuffer(GL_ARRAY_BUFFER, 0));
+  tex_coord_buffer_dirty_ = false;
 }
 
 }  // namespace gpupixel
