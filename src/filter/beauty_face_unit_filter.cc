@@ -48,6 +48,7 @@ const std::string kGPUImageBaseBeautyFaceFragmentShaderString = R"(
     uniform sampler2D inputImageTexture;
     uniform sampler2D inputImageTexture2;
     uniform sampler2D inputImageTexture3;
+    uniform sampler2D faceMaskTexture;
     uniform sampler2D lookUpGray;
     uniform sampler2D lookUpOrigin;
     uniform sampler2D lookUpSkin;
@@ -56,6 +57,7 @@ const std::string kGPUImageBaseBeautyFaceFragmentShaderString = R"(
     uniform highp float sharpen;
     uniform highp float blurAlpha;
     uniform highp float whiten;
+    uniform float faceMaskEnabled;
 
     const float levelRangeInv = 1.02657;
     const float levelBlack = 0.0258820;
@@ -67,6 +69,11 @@ const std::string kGPUImageBaseBeautyFaceFragmentShaderString = R"(
       vec4 varColor = texture2D(inputImageTexture3, textureCoordinate);
 
       vec3 color = iColor.rgb;
+      float maskWeight = 1.0;
+      if (faceMaskEnabled > 0.5) {
+        maskWeight = texture2D(faceMaskTexture, textureCoordinate).r;
+      }
+      float whitenAmount = whiten * maskWeight;
       if (blurAlpha >= 0.0) {
         float theta = 0.1;
         float p =
@@ -92,7 +99,7 @@ const std::string kGPUImageBaseBeautyFaceFragmentShaderString = R"(
         color = resultColor + sharpen * hPass * 2.0;
       }
 
-      if (whiten > 0.0) {
+      if (whitenAmount > 0.0) {
         vec3 colorEPM = color;
         color =
             clamp((colorEPM - vec3(levelBlack)) * levelRangeInv, 0.0, 1.0);
@@ -154,7 +161,7 @@ const std::string kGPUImageBaseBeautyFaceFragmentShaderString = R"(
         newColor2 = texture2D(lookUpCustom, texPos2_custom).rgb;
         vec3 color_custom =
             mix(newColor1, newColor2, fract(blueColor_custom));
-        color = mix(color, color_custom, whiten);
+        color = mix(color, color_custom, whitenAmount);
       }
 
       gl_FragColor = vec4(color, iColor.a);
@@ -169,6 +176,7 @@ const std::string kGPUImageBaseBeautyFaceFragmentShaderString = R"(
     uniform sampler2D inputImageTexture;
     uniform sampler2D inputImageTexture2;
     uniform sampler2D inputImageTexture3;
+    uniform sampler2D faceMaskTexture;
     uniform sampler2D lookUpGray;
     uniform sampler2D lookUpOrigin;
     uniform sampler2D lookUpSkin;
@@ -177,6 +185,7 @@ const std::string kGPUImageBaseBeautyFaceFragmentShaderString = R"(
     uniform float sharpen;
     uniform float blurAlpha;
     uniform float whiten;
+    uniform float faceMaskEnabled;
 
     const float levelRangeInv = 1.02657;
     const float levelBlack = 0.0258820;
@@ -189,6 +198,11 @@ const std::string kGPUImageBaseBeautyFaceFragmentShaderString = R"(
 
   
       vec3 color = iColor.rgb;
+      float maskWeight = 1.0;
+      if (faceMaskEnabled > 0.5) {
+        maskWeight = texture2D(faceMaskTexture, textureCoordinate).r;
+      }
+      float whitenAmount = whiten * maskWeight;
       if (blurAlpha > 0.0) {
         float theta = 0.1;
         float p =
@@ -215,7 +229,7 @@ const std::string kGPUImageBaseBeautyFaceFragmentShaderString = R"(
       }
 
       // whiten
-      if (whiten > 0.0) {
+      if (whitenAmount > 0.0) {
         vec3 colorEPM = color;
         color =
             clamp((colorEPM - vec3(levelBlack)) * levelRangeInv, 0.0, 1.0);
@@ -277,7 +291,7 @@ const std::string kGPUImageBaseBeautyFaceFragmentShaderString = R"(
         newColor2 = texture2D(lookUpCustom, texPos2_custom).rgb;
         vec3 color_custom =
             mix(newColor1, newColor2, fract(blueColor_custom));
-        color = mix(color, color_custom, whiten);
+        color = mix(color, color_custom, whitenAmount);
       }
       
       gl_FragColor = vec4(color, 1.0);
@@ -302,7 +316,7 @@ std::shared_ptr<BeautyFaceUnitFilter> BeautyFaceUnitFilter::Create() {
 bool BeautyFaceUnitFilter::Init() {
   if (!Filter::InitWithShaderString(kGPUImageBaseBeautyFaceVertexShaderString,
                                     kGPUImageBaseBeautyFaceFragmentShaderString,
-                                    3)) {
+                                    4)) {
     return false;
   }
 
@@ -339,6 +353,18 @@ bool BeautyFaceUnitFilter::DoRender(bool updateSinks) {
   GL_CALL(glBindTexture(GL_TEXTURE_2D,
                         input_framebuffers_[2].frame_buffer->GetTexture()));
   filter_program_->SetUniformValue("inputImageTexture3", 4);
+
+  auto mask_framebuffer = input_framebuffers_.find(3);
+  bool bind_mask =
+      face_mask_enabled_ && mask_framebuffer != input_framebuffers_.end() &&
+      mask_framebuffer->second.frame_buffer;
+  filter_program_->SetUniformValue("faceMaskEnabled", bind_mask ? 1.0f : 0.0f);
+  if (bind_mask) {
+    GL_CALL(glActiveTexture(GL_TEXTURE8));
+    GL_CALL(glBindTexture(GL_TEXTURE_2D,
+                          mask_framebuffer->second.frame_buffer->GetTexture()));
+    filter_program_->SetUniformValue("faceMaskTexture", 8);
+  }
 
   // texcoord attribute
   uint32_t filter_tex_coord_attribute =
@@ -399,6 +425,10 @@ void BeautyFaceUnitFilter::SetWhite(float white) {
 #else
   white_balance_ = white;
 #endif
+}
+
+void BeautyFaceUnitFilter::EnableFaceMask(bool enabled) {
+  face_mask_enabled_ = enabled;
 }
 
 }  // namespace gpupixel

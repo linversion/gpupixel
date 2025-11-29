@@ -361,6 +361,7 @@ public class MainActivity extends AppCompatActivity {
             if (landmarks != null && landmarks.length > 0) {
                 mFaceReshapeFilter.SetProperty("face_landmark", landmarks);
                 mLipstickFilter.SetProperty("face_landmark", landmarks);
+                mBeautyFilter.SetProperty("face_landmark", landmarks);
             }
 
             // Pass rotated RGBA data into GPUPixel processing chain

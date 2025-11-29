@@ -28,6 +28,7 @@ For more complex effects, you can create multiple filters and chain them togethe
       lipstick_filter_->SetFaceLandmarks(landmarks);
       blusher_filter_->SetFaceLandmarks(landmarks);
       face_reshape_filter_->SetFaceLandmarks(landmarks);
+      beauty_face_filter_->SetFaceLandmarks(landmarks);
    });
    
    // Link the filter chain
@@ -50,6 +51,11 @@ beauty_face_filter_->SetBlurAlpha(value/10);
 
 // Set whitening level (0.0-1.0)
 beauty_face_filter_->SetWhite(value/20);
+
+// Provide normalized landmark coordinates (0.0-1.0) so whitening only
+// affects detected facial regions (pass an empty vector when no face
+// is present to disable the mask)
+beauty_face_filter_->SetFaceLandmarks(landmarks);
 ```
 
 ### Face Reshape Filter

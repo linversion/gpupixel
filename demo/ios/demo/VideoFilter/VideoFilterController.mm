@@ -297,6 +297,7 @@ using namespace gpupixel;
     _lipstickFilter->SetFaceLandmarks(landmarks);
     _blusherFilter->SetFaceLandmarks(landmarks);
     _faceReshapeFilter->SetFaceLandmarks(landmarks);
+    _beautyFaceFilter->SetFaceLandmarks(landmarks);
   }
 
   _sourceRawData->ProcessData(pixels, stride, height, stride,

@@ -23,6 +23,7 @@ class GPUPIXEL_API BeautyFaceUnitFilter : public Filter {
   void SetSharpen(float sharpen);
   void SetBlurAlpha(float blurAlpha);
   void SetWhite(float white);
+  void EnableFaceMask(bool enabled);
 
  protected:
   BeautyFaceUnitFilter();
@@ -36,6 +37,7 @@ class GPUPIXEL_API BeautyFaceUnitFilter : public Filter {
   float sharpen_factor_ = 0.0;
   float blur_alpha_ = 0.0;
   float white_balance_ = 0.0;
+  bool face_mask_enabled_ = false;
 };
 
 }  // namespace gpupixel

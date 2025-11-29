@@ -476,6 +476,7 @@ void RenderFrame() {
     lipstick_filter_->SetFaceLandmarks(landmarks);
     blusher_filter_->SetFaceLandmarks(landmarks);
     reshape_filter_->SetFaceLandmarks(landmarks);
+    beauty_filter_->SetFaceLandmarks(landmarks);
   }
 #endif
 
