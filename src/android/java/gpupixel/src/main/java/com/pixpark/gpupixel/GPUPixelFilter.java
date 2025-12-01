@@ -51,6 +51,7 @@ public class GPUPixelFilter extends GPUPixelSource implements GPUPixelSink {
 
     // Other processing filters
     public static final String LUMINANCE_RANGE_FILTER = "LuminanceRangeFilter";
+    public static final String LOOKUP_FILTER = "LookupFilter";
 
     protected GPUPixelFilter(final String filterClassName) {
         if (mNativeClassID != 0) return;

@@ -23,6 +23,8 @@ init_filter_factory() {
   factory["BlusherFilter"] = BlusherFilter::Create;
   factory["FaceMakeupFilter"] = FaceMakeupFilter::Create;
 
+  factory["LookupFilter"] = LookupFilter::Create;
+
   // // Basic adjustment filters
   // factory["ContrastFilter"] = ContrastFilter::Create;
   // factory["ExposureFilter"] = ExposureFilter::Create;
