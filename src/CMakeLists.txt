@@ -53,6 +53,7 @@ set(common_source_files
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/rgb_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/face_makeup_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/hue_filter.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/filter/lookup_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/nearby_sampling3x3_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/posterize_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/color_invert_filter.cc
@@ -181,6 +182,7 @@ set(public_filter_header_files
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/color_invert_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/filter_group.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/ios_blur_filter.h
+    ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/lookup_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/halftone_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/pixellation_filter.h)
 

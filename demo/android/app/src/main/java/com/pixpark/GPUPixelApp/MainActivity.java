@@ -44,6 +44,7 @@ public class MainActivity extends AppCompatActivity {
     private GPUPixelFilter mBeautyFilter;
     private GPUPixelFilter mFaceReshapeFilter;
     private GPUPixelFilter mLipstickFilter;
+    private GPUPixelFilter mLookupFilter;
     private FaceDetector mFaceDetector;
     private GPUPixelSinkSurface mSinkSurface;
     private GPUPixelSinkRawData mCaptureSinkRawData;
@@ -294,10 +295,12 @@ public class MainActivity extends AppCompatActivity {
         // SourceRawData is used to receive raw RGBA data
         mSourceRawData = GPUPixelSourceRawData.Create();
 
-        // Create filters: lipstick filter -> beauty filter -> face reshaping filter
+        // Create filters: lipstick filter -> beauty filter -> face reshaping filter -> lookup filter
         mLipstickFilter = GPUPixelFilter.Create(GPUPixelFilter.LIPSTICK_FILTER);
         mBeautyFilter = GPUPixelFilter.Create(GPUPixelFilter.BEAUTY_FACE_FILTER);
         mFaceReshapeFilter = GPUPixelFilter.Create(GPUPixelFilter.FACE_RESHAPE_FILTER);
+        mLookupFilter = GPUPixelFilter.Create(GPUPixelFilter.LOOKUP_FILTER);
+        configureLookupFilter();
 
         // Create output - use SinkSurface for direct rendering
         // Note: must be created before setting camera callback
@@ -364,7 +367,7 @@ public class MainActivity extends AppCompatActivity {
             }
 
             // Pass rotated RGBA data into GPUPixel processing chain
-            // Processing flow: Source -> lipstick filter -> beauty filter -> face reshaping filter -> SinkSurface
+            // Processing flow: Source -> LipstickFilter -> BeautyFilter -> FaceReshapeFilter -> LookupFilter -> SinkSurface
             // SinkSurface will render directly in C layer EGL environment to TextureView, no Java layer intervention needed
             mSourceRawData.ProcessData(
                     rotatedData,
@@ -397,14 +400,22 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
-        // Connect processing chain: data source -> filter1 -> filter2 -> filter3 -> output
-        // Data flow: SourceRawData -> LipstickFilter -> BeautyFilter -> FaceReshapeFilter -> SinkSurface
+        // Connect processing chain: data source -> filters -> output
+        // Data flow: SourceRawData -> LipstickFilter -> BeautyFilter -> FaceReshapeFilter -> LookupFilter -> SinkSurface
         mSourceRawData.AddSink(mLipstickFilter);
         mLipstickFilter.AddSink(mBeautyFilter);
         mBeautyFilter.AddSink(mFaceReshapeFilter);
-        mFaceReshapeFilter.AddSink(mSinkSurface);
-        if (mCaptureSinkRawData != null) {
-            mFaceReshapeFilter.AddSink(mCaptureSinkRawData);
+        if (mLookupFilter != null) {
+            mFaceReshapeFilter.AddSink(mLookupFilter);
+            mLookupFilter.AddSink(mSinkSurface);
+            if (mCaptureSinkRawData != null) {
+                mLookupFilter.AddSink(mCaptureSinkRawData);
+            }
+        } else {
+            mFaceReshapeFilter.AddSink(mSinkSurface);
+            if (mCaptureSinkRawData != null) {
+                mFaceReshapeFilter.AddSink(mCaptureSinkRawData);
+            }
         }
 
         // Start camera, begin capturing images
@@ -415,6 +426,36 @@ public class MainActivity extends AppCompatActivity {
         updateMirrorSetting();
 
         Log.d(TAG, "setupCamera: cost " + (System.currentTimeMillis() - start));
+    }
+
+    private void configureLookupFilter() {
+        if (mLookupFilter == null) {
+            return;
+        }
+
+        String lutPath = resolveResourcePath("lookup_light.png");
+        if (lutPath == null) {
+            Log.w(TAG, "Default LUT texture not found, disabling lookup filter");
+            mLookupFilter.SetProperty("lookup_intensity", 0.0f);
+            return;
+        }
+
+        mLookupFilter.SetProperty("lookup_path", lutPath);
+        mLookupFilter.SetProperty("lookup_intensity", 1.0f);
+    }
+
+    private String resolveResourcePath(String fileName) {
+        File baseDir = getExternalFilesDir(null);
+        if (baseDir == null) {
+            Log.w(TAG, "External files dir is null, cannot resolve resource path for " + fileName);
+            return null;
+        }
+        File resource = new File(new File(baseDir, "gpupixel/res"), fileName);
+        if (!resource.exists()) {
+            Log.w(TAG, "Resource not found: " + resource.getAbsolutePath());
+            return null;
+        }
+        return resource.getAbsolutePath();
     }
 
     /**
@@ -572,6 +613,11 @@ public class MainActivity extends AppCompatActivity {
         if (mLipstickFilter != null) {
             mLipstickFilter.Destroy();
             mLipstickFilter = null;
+        }
+
+        if (mLookupFilter != null) {
+            mLookupFilter.Destroy();
+            mLookupFilter = null;
         }
 
         if (mSourceRawData != null) {

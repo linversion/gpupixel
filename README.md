@@ -60,8 +60,11 @@ https://github.com/user-attachments/assets/6b760fa6-e28f-4428-bfca-dec54a4e82d8
 
 🔍 See the docs: [Introduction](https://gpupixel.pixpark.net/guide/build) | [Build](https://gpupixel.pixpark.net/guide/build) | [Demo](https://gpupixel.pixpark.net/guide/demo) | [Integration](https://gpupixel.pixpark.net/guide/integrated)
 
+## Android Preview LUT Filter
 
-
+- Enable color-grading in previews with `LookupFilter`, created by `GPUPixelFilter.Create(GPUPixelFilter.LOOKUP_FILTER)`.
+- Set `lookup_path` to your LUT PNG (absolute path or relative to the copied `gpupixel/res` folder) and control blend strength through `lookup_intensity`.
+- The Android sample now inserts this filter before `GPUPixelSinkSurface`, so the live preview and captured frames both include the LUT result.
 
 ## Contributing
 
