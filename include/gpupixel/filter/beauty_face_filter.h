@@ -7,10 +7,12 @@
 
 #pragma once
 
-#include "gpupixel/filter/beauty_face_filter.h"
+#include <vector>
+
 #include "gpupixel/filter/beauty_face_unit_filter.h"
 #include "gpupixel/filter/box_blur_filter.h"
 #include "gpupixel/filter/box_high_pass_filter.h"
+#include "gpupixel/filter/face_mask_filter.h"
 #include "gpupixel/filter/gaussian_blur_filter.h"
 
 namespace gpupixel {
@@ -26,6 +28,7 @@ class GPUPIXEL_API BeautyFaceFilter : public FilterGroup {
   void SetSharpen(float sharpen);
   void SetBlurAlpha(float blurAlpha);
   void SetWhite(float white);
+  void SetFaceLandmarks(const std::vector<float>& landmarks);
   void SetRadius(float sigma);
 
   virtual void SetInputFramebuffer(
@@ -37,6 +40,7 @@ class GPUPIXEL_API BeautyFaceFilter : public FilterGroup {
   BeautyFaceFilter();
   std::shared_ptr<BoxBlurFilter> box_blur_filter_;
   std::shared_ptr<BoxHighPassFilter> box_high_pass_filter_;
+  std::shared_ptr<FaceMaskFilter> face_mask_filter_;
   std::shared_ptr<BeautyFaceUnitFilter> beauty_face_filter_;
 };
 

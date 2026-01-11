@@ -43,6 +43,7 @@ set(common_source_files
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/toon_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/pixellation_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/beauty_face_unit_filter.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/filter/face_mask_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/single_component_gaussian_blur_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/non_maximum_suppression_filter.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/filter/canny_edge_detection_filter.cc
@@ -167,6 +168,7 @@ set(public_filter_header_files
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/nearby_sampling3x3_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/gaussian_blur_mono_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/face_makeup_filter.h
+    ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/face_mask_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/emboss_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/canny_edge_detection_filter.h
     ${PROJECT_SOURCE_DIR}/include/gpupixel/filter/box_difference_filter.h

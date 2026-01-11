@@ -220,6 +220,7 @@ using namespace gpupixel;
     _lipstickFilter->SetFaceLandmarks(landmarks);
     _blusherFilter->SetFaceLandmarks(landmarks);
     _faceReshapeFilter->SetFaceLandmarks(landmarks);
+    _beautyFaceFilter->SetFaceLandmarks(landmarks);
   }
 
   _gpuSourceImage->Render();
