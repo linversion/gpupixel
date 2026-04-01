@@ -7,6 +7,11 @@ if(${CMAKE_SYSTEM_NAME} MATCHES "Darwin" OR ${CMAKE_SYSTEM_NAME} MATCHES "iOS")
   add_compile_definitions(GLES_SILENCE_DEPRECATION)
 endif()
 
+# add neon support
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "arm")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mfpu=neon")
+endif()
+
 # index file
 set(common_source_files
     ${CMAKE_CURRENT_SOURCE_DIR}/core/gpupixel.cc
@@ -18,6 +23,7 @@ set(common_source_files
     ${CMAKE_CURRENT_SOURCE_DIR}/source/source_raw_data.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/source/source_image.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/sink/sink_raw_data.cc
+    ${CMAKE_CURRENT_SOURCE_DIR}/sink/sink_raw_data_yuv.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/sink/sink_render.cc
 #if defined(GPUPIXEL_ANDROID)
     ${CMAKE_CURRENT_SOURCE_DIR}/sink/sink_surface.cc
@@ -95,7 +101,7 @@ set(jni_source_files
     ${CMAKE_CURRENT_SOURCE_DIR}/android/jni/jni_source_image.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/android/jni/jni_face_detector.cc
     ${CMAKE_CURRENT_SOURCE_DIR}/android/jni/jni_sink_raw_data.cc
-    ${CMAKE_CURRENT_SOURCE_DIR}/android/jni/jni_sink_surface.cc)
+    ${CMAKE_CURRENT_SOURCE_DIR}/android/jni/jni_sink_raw_yuv.cc)
 
 set(lib_source_code_files ${common_source_files})
 

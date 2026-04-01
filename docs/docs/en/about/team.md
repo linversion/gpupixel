@@ -49,13 +49,7 @@ The GPUPixel project was created and is led by [Jaaron Kot](https://github.com/j
 - 📱 Cross-platform compatibility support
 - 🛠️ Developer tools improvement
 - 📖 Documentation and demo refinement
-
-## Community Contributors
-
-Thanks to the following community members for their contributions:
-
-<VPTeamMembers size="small" :members="contributors" />
-
+ 
 ## Join Us
 
 We welcome various forms of contributions, including but not limited to:
@@ -69,15 +63,12 @@ We welcome various forms of contributions, including but not limited to:
 ### How to Participate
 
 1. Check our [Contribution Guide](../guide/contributing)
-2. Join our [Discord](https://discord.gg/q2MjmqK4) community
-3. Follow project updates on [GitHub](https://github.com/pixpark/gpupixel)
+2. Follow project updates on [GitHub](https://github.com/pixpark/gpupixel)
 
 ## Contact Us
 
-- 📧 Email: [jaaronkot@gmail.com](mailto:jaaronkot@gmail.com)
-- 💬 Discord: [Join Discussion](https://discord.gg/q2MjmqK4)
-- 🐦 Twitter: [@jaaronkot](https://twitter.com/jaaronkot)
-
+- 📧 Email: [hello@pixpark.net](mailto:hello@pixpark.net)
+ 
 ---
 
 💝 Thank you to all developers who have contributed to the GPUPixel project!

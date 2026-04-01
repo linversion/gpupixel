@@ -49,13 +49,7 @@ GPUPixel 项目由 [Jaaron Kot](https://github.com/jaaronkot) 创建并主导开
 - 📱 跨平台兼容性支持
 - 🛠️ 开发者工具改进
 - 📖 文档和示例完善
-
-## 社区贡献者
-
-感谢以下社区成员对项目的贡献：
-
-<VPTeamMembers size="small" :members="contributors" />
-
+ 
 ## 加入我们
 
 我们欢迎各类形式的贡献，包括但不限于：
@@ -69,15 +63,12 @@ GPUPixel 项目由 [Jaaron Kot](https://github.com/jaaronkot) 创建并主导开
 ### 如何参与
 
 1. 查看我们的 [贡献指南](../guide/contributing)
-2. 加入 [Discord](https://discord.gg/q2MjmqK4) 社区
-3. 关注项目 [GitHub](https://github.com/pixpark/gpupixel) 动态
+2. 关注项目 [GitHub](https://github.com/pixpark/gpupixel) 动态
 
 ## 联系我们
 
-- 📧 邮件：[jaaronkot@gmail.com](mailto:jaaronkot@gmail.com)
-- 💬 Discord：[加入讨论](https://discord.gg/q2MjmqK4)
-- 🐦 Twitter：[@jaaronkot](https://twitter.com/jaaronkot)
-
+- 📧 邮件：[hello@pixpark.net](mailto:hello@pixpark.net)
+ 
 ---
 
 💝 感谢所有为 GPUPixel 项目做出贡献的开发者！

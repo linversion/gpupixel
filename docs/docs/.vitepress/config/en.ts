@@ -46,19 +46,11 @@ function nav(): DefaultTheme.NavItem[] {
       text: 'About',
       items: [
         {
-          text: 'Team',
-          link: '/about/team'
-        },
-        {
           text: 'Contact',
           link: 'about/contact'
         },
         {
           items: [
-            {
-              text: 'Blog',
-              link: 'https://pixpark.net' 
-            },
             {
               text: 'Contributing',
               link: 'https://github.com/pixpark/gpupixel/issues/new/choose'
@@ -66,10 +58,6 @@ function nav(): DefaultTheme.NavItem[] {
           ],
         }
       ]
-    },
-    {
-      text: 'Sponsor',
-      link: 'sponsor'
     }
   ]
 }
@@ -104,13 +92,6 @@ function sidebarGuide(): DefaultTheme.SidebarItem[] {
         { text: 'Custom Output', link: 'custom/custom_target' },
       ]
     },   
-    {
-      text: 'Face Detect',
-      collapsed: false,
-      items: [
-        { text: 'Landmark', link: 'face/landmark' },
-      ]
-    },
     {
       text: 'Reference',
       collapsed: false,
