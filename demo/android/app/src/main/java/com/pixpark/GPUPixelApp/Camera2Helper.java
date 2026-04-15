@@ -277,6 +277,8 @@ public class Camera2Helper {
                                         request, null, mBackgroundHandler);
                             } catch (CameraAccessException e) {
                                 Log.e(TAG, "Failed to set up capture request", e);
+                            } catch (IllegalStateException e) {
+                                Log.e(TAG, "Session is closed", e);
                             }
                         }
 
@@ -422,6 +424,10 @@ public class Camera2Helper {
             mCaptureSession.setRepeatingRequest(request, null, mBackgroundHandler);
         } catch (CameraAccessException e) {
             Log.e(TAG, "Failed to toggle flashlight", e);
+            // Revert state on error
+            mFlashlightEnabled = !mFlashlightEnabled;
+        } catch (IllegalStateException e) {
+            Log.e(TAG, "Session is closed, cannot toggle flashlight", e);
             // Revert state on error
             mFlashlightEnabled = !mFlashlightEnabled;
         }

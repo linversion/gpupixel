@@ -38,6 +38,7 @@ import java.util.concurrent.Executors;
 public class MainActivity extends AppCompatActivity {
     private static final int CAMERA_PERMISSION_REQUEST_CODE = 200;
     private static final String TAG = "GPUPixelDemo";
+    private static final boolean ENABLE_LOOKUP_FILTER = true;
 
     Camera2Helper mCamera2Helper;
     private GPUPixelSourceRawData mSourceRawData;
@@ -63,6 +64,18 @@ public class MainActivity extends AppCompatActivity {
     //    private CainCameraWrapper cainCameraWrapper;
     // Memory buffer for taking pictures
     private ByteBuffer mTakePictureBuffer;
+
+    private boolean isFilterReady(GPUPixelFilter filter, String filterName) {
+        if (filter == null) {
+            Log.w(TAG, filterName + " is null");
+            return false;
+        }
+        if (!filter.IsValid()) {
+            Log.w(TAG, filterName + " native handle is 0");
+            return false;
+        }
+        return true;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -299,7 +312,17 @@ public class MainActivity extends AppCompatActivity {
         mLipstickFilter = GPUPixelFilter.Create(GPUPixelFilter.LIPSTICK_FILTER);
         mBeautyFilter = GPUPixelFilter.Create(GPUPixelFilter.BEAUTY_FACE_FILTER);
         mFaceReshapeFilter = GPUPixelFilter.Create(GPUPixelFilter.FACE_RESHAPE_FILTER);
-        mLookupFilter = GPUPixelFilter.Create(GPUPixelFilter.LOOKUP_FILTER);
+        if (ENABLE_LOOKUP_FILTER) {
+            mLookupFilter = GPUPixelFilter.Create(GPUPixelFilter.LOOKUP_FILTER);
+            if (!isFilterReady(mLookupFilter, "LookupFilter")) {
+                mLookupFilter = null;
+            } else {
+                Log.i(TAG, "LookupFilter created successfully");
+            }
+        } else {
+            mLookupFilter = null;
+            Log.i(TAG, "LookupFilter disabled for comparison");
+        }
         configureLookupFilter();
 
         // Create output - use SinkSurface for direct rendering
@@ -405,13 +428,14 @@ public class MainActivity extends AppCompatActivity {
         mSourceRawData.AddSink(mLipstickFilter);
         mLipstickFilter.AddSink(mBeautyFilter);
         mBeautyFilter.AddSink(mFaceReshapeFilter);
-        if (mLookupFilter != null) {
+        if (isFilterReady(mLookupFilter, "LookupFilter")) {
             mFaceReshapeFilter.AddSink(mLookupFilter);
             mLookupFilter.AddSink(mSinkSurface);
             if (mCaptureSinkRawData != null) {
                 mLookupFilter.AddSink(mCaptureSinkRawData);
             }
         } else {
+            Log.w(TAG, "Lookup filter unavailable, bypassing it in preview chain");
             mFaceReshapeFilter.AddSink(mSinkSurface);
             if (mCaptureSinkRawData != null) {
                 mFaceReshapeFilter.AddSink(mCaptureSinkRawData);
@@ -429,7 +453,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     private void configureLookupFilter() {
-        if (mLookupFilter == null) {
+        if (!isFilterReady(mLookupFilter, "LookupFilter")) {
             return;
         }
 
@@ -442,6 +466,7 @@ public class MainActivity extends AppCompatActivity {
 
         mLookupFilter.SetProperty("lookup_path", lutPath);
         mLookupFilter.SetProperty("lookup_intensity", 1.0f);
+        Log.i(TAG, "Configured LookupFilter LUT path: " + lutPath);
     }
 
     private String resolveResourcePath(String fileName) {

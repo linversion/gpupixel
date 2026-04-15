@@ -252,11 +252,11 @@ public class GPUPixel {
     }
 
     // JNI Native methods
-    private static native void nativeYUV420ToRGBA(ByteBuffer yBuffer, ByteBuffer uBuffer,
+    public static native void nativeYUV420ToRGBA(ByteBuffer yBuffer, ByteBuffer uBuffer,
             ByteBuffer vBuffer, int width, int height, int yRowStride, int uRowStride,
             int vRowStride, int yPixelStride, int uPixelStride, int vPixelStride, byte[] rgbaOut);
 
-    private static native void nativeRotateRGBA(byte[] rgbaIn, int width, int height,
+    public static native void nativeRotateRGBA(byte[] rgbaIn, int width, int height,
             byte[] rgbaOut, int outWidth, int outHeight, int rotationDegrees);
 
     private static native void nativeSetResourcePath(String path);

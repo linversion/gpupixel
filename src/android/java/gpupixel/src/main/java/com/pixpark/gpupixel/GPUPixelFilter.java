@@ -7,7 +7,10 @@
 
 package com.pixpark.gpupixel;
 
+import android.util.Log;
+
 public class GPUPixelFilter extends GPUPixelSource implements GPUPixelSink {
+    private static final String TAG = "GPUPixelFilter";
     private String filterClassName;
 
     // Beauty-related filters
@@ -57,6 +60,9 @@ public class GPUPixelFilter extends GPUPixelSource implements GPUPixelSink {
         if (mNativeClassID != 0) return;
         mNativeClassID = nativeFilterCreate(filterClassName);
         this.filterClassName = filterClassName;
+        if (mNativeClassID == 0) {
+            Log.e(TAG, "Failed to create native filter: " + filterClassName);
+        }
     }
 
     /**
@@ -70,6 +76,10 @@ public class GPUPixelFilter extends GPUPixelSource implements GPUPixelSink {
 
     public String GetFilterClassName() {
         return filterClassName;
+    }
+
+    public final boolean IsValid() {
+        return mNativeClassID != 0;
     }
 
     public final void SetProperty(final String property, final double value) {

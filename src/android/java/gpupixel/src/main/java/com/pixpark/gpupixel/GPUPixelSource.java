@@ -7,10 +7,13 @@
 
 package com.pixpark.gpupixel;
 
+import android.util.Log;
+
 /**
  * Base source class for GPU image processing pipeline
  */
 public class GPUPixelSource {
+    private static final String TAG = "GPUPixelSource";
     protected long mNativeClassID = 0;
 
     // Base constructor - subclasses must implement their own constructors and set mNativeClassID
@@ -31,10 +34,24 @@ public class GPUPixelSource {
      * @param sink The sink object to add
      */
     public final void AddSink(final GPUPixelSink sink) {
-        if (mNativeClassID != 0) {
-            nativeAddSink(mNativeClassID, sink.getNativeClassID(), sink instanceof GPUPixelFilter,
-                    this instanceof GPUPixelFilter);
+        if (mNativeClassID == 0) {
+            Log.w(TAG, "AddSink skipped: source native handle is 0");
+            return;
         }
+        if (sink == null) {
+            Log.w(TAG, "AddSink skipped: sink is null");
+            return;
+        }
+
+        long sinkNativeClassId = sink.getNativeClassID();
+        if (sinkNativeClassId == 0) {
+            Log.w(TAG, "AddSink skipped: sink native handle is 0 for "
+                    + sink.getClass().getSimpleName());
+            return;
+        }
+
+        nativeAddSink(mNativeClassID, sinkNativeClassId, sink instanceof GPUPixelFilter,
+                this instanceof GPUPixelFilter);
     }
 
     /**
