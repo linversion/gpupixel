@@ -137,6 +137,15 @@ namespace gpupixel {
         } background_color_;
 
         float display_vertices_[8];  // Display vertices coordinates (8 floats, 4 vertices with 2 coordinates each)
+        float texture_coordinates_[8];
+
+        uint32_t vertex_buffer_id_ = 0;
+        uint32_t tex_coord_buffer_id_ = 0;
+        bool vertex_buffer_dirty_ = true;
+        bool tex_coord_buffer_dirty_ = true;
+        RotationMode cached_tex_rotation_ = NoRotation;
+        bool cached_tex_mirror_ = false;
+        bool texture_cache_initialized_ = false;
 
         // Android Surface related
         ANativeWindow* native_window_ = nullptr;  // Android native window pointer
@@ -148,6 +157,11 @@ namespace gpupixel {
          * Calculate vertex coordinates based on input framebuffer dimensions and fill mode
          */
         void UpdateDisplayVertices();
+        void UpdateTextureCoordinatesCache(RotationMode rotation_mode);
+        void InitVertexBuffers();
+        void DestroyVertexBuffers();
+        void UploadVertexBuffer();
+        void UploadTexCoordBuffer();
 
         /**
          * @brief Get texture coordinates
